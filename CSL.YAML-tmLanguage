@@ -1,0 +1,318 @@
+# [PackageDev] target_format: plist, ext: tmLanguage
+---
+name: Coral (CSL)
+scopeName: source.coral
+fileTypes: [csl]
+uuid: a68ef5ba-852a-4c5c-b94f-e09794cb051a
+
+patterns:
+- include: '#csl'
+
+repository:
+  annotation:
+    patterns:
+    - name: meta.declaration.annotation.coral
+      begin: (@[^ (]+)(\()
+      beginCaptures:
+        '1': {name: storage.type.annotation.coral}
+        '2': {name: punctuation.definition.annotation-arguments.begin.coral}
+      end: (\))
+      endCaptures:
+        '1': {name: punctuation.definition.annotation-arguments.end.coral}
+      patterns:
+      - match: (\w*)\s*(=)
+        captures:
+          '1': {name: constant.other.key.coral}
+          '2': {name: keyword.operator.assignment.coral}
+      - include: '#values'
+      - name: punctuation.separator.property.coral
+        match: ','
+    - name: storage.type.annotation.coral
+      match: '@\w*'
+
+  class-body:
+    patterns:
+    - include: '#annotation'
+    - include: '#comment'
+    - include: '#cpp-block'
+    - include: '#port'
+    - include: '#method'
+    - include: '#field'
+    - name: punctuation.terminator.coral
+      match: ;
+
+  class-spec:
+    name: meta.type.coral
+    begin: (?=(?:component|interface|native class|struct)\s+\w+)
+    end: '}'
+    endCaptures:
+      '0': {name: punctuation.section.class.end.coral}
+    patterns:
+    - name: meta.type.identifier.coral
+      match: (component|interface|enum|native class|struct)\s+(\w+)
+      captures:
+        '1': {name: keyword.control.class.coral}
+        '2': {name: entity.name.type.class.coral}
+    - name: meta.type.extends.coral
+      begin: (extends)
+      end: (?=\{)
+      beginCaptures:
+        '1': {name: storage.modifier.extends.coral}
+      patterns:
+        - name: entity.other.inherited-class.coral
+          match: (?:\w+\.)*\w+
+    - name: meta.type.body.coral
+      begin: '{'
+      end: (?=})
+      patterns:
+      - include: '#class-body'
+
+  cpp-block:
+    name: meta.type.cppblock.coral
+    begin: (<c\+\+)
+    end: (c\+\+>)
+    captures:
+      '1': {name: punctuation.section.embedded.cpp.coral}
+    patterns:
+    - include: source.c++
+
+  csl:
+    patterns:
+    - include: '#annotation'
+    - include: '#comment'
+    - include: '#import'
+    - include: '#enum-spec'
+    - include: '#class-spec'
+    - name: meta.exception.coral
+      match: (exception)\s+(\w+)
+      captures:
+        '1': {name: keyword.control.class.coral}
+        '2': {name: entity.name.type.class.coral}
+    - name: punctuation.terminator.coral
+      match: ;
+
+  comment:
+    patterns:
+    - name: comment.block.documentation.coral
+      begin: /\*
+      end: \*/
+      patterns:
+      - name: meta.doc.embedded.yaml.coral
+        begin: ^\s*(---)\s*$
+        beginCaptures:
+          '1': {name: punctuation.section.embedded.yaml.coral}
+        end: (?=\*/)
+        patterns:
+        - include: '#doc-yaml'
+      - include: '#doc-markdown'
+    - name: comment.block.documentation.coral
+      match: //.*$\n?
+
+  doc-markdown:
+    comment: >
+      Basic Markdown highlighting. We use a single-color scheme
+      in order not to distract the viewer too much from the code.
+    patterns:
+    - comment: code blocks
+      name: keyword.other.documentation.coral
+      begin: ^\s*~~~
+      end: (?:^\s~~~|(?=\*/))
+    - comment: single-line section headings
+      name: keyword.other.documentation.coral
+      begin: ^\s*(?:#{1,6})(?!#)\s*(?=\S)
+      end: \s*(?:#+|$\n?)
+    - comment: coral member refs
+      name: keyword.other.documentation.coral
+      match: \#\w+\b
+    - comment: horizontal rules
+      name: keyword.other.documentation.coral
+      match: ^\s*[_*-]\s*[_*-]\s*[_*-](?:\s*[_*-]+)*\s*$
+    - comment: lists and blockquotes
+      name: keyword.other.documentation.coral
+      match: ^\s*(?:[>*+-]|[0-9]+\.)(?=\s)
+    - comment: inline link/image
+      name: keyword.other.documentation.coral
+      match: \!?\[[^\]]+\]\([^\)]+\)
+    - comment: ref link/image
+      name: keyword.other.documentation.coral
+      match: \!?\[[^\]]+\]\s?\[[^\]]*\]
+    - comment: link definitions
+      name: keyword.other.documentation.coral
+      match: \[[^\]]+\]:\s*\S.*$
+    - comment: auto links and HTML tags
+      name: keyword.other.documentation.coral
+      match: <.*>
+    - comment: emphasis, bold, code
+      name: keyword.other.documentation.coral
+      match: (?<!\\)(\*\*?|__?|``?)([\w\*_`]+|.+?)(\1)
+
+  doc-yaml:
+    comment: simple YAML highlighter
+    patterns:
+    - name: string.unquoted.block.yaml.coral
+      begin: ^(\s*)(?:(-)|(?:(-\s*)?(\w+\s*(:))))\s*(\||>)
+      beginCaptures:
+        '2': {name: punctuation.definition.entry.yaml.coral}
+        '3': {name: punctuation.definition.entry.yaml.coral}
+        '4': {name: entity.other.attribute-name.yaml.coral}
+        '5': {name: punctuation.separator.key-value.yaml.coral}
+      end: ^(?!^\1)|^(?=\1(-|\w+\s*:)|#|\*/)
+    - name: constant.numeric.yaml.coral
+      match: (?:(?:(-\s*)?(\w+\s*(:)))|(-))\s*((0(x|X)[0-9a-fA-F]*)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)(L|l|UL|ul|u|U|F|f)?\s*$
+      captures:
+        '1': {name: punctuation.definition.entry.yaml.coral}
+        '2': {name: entity.other.attribute-name.coral}
+        '3': {name: punctuation.separator.key-value.yaml.coral}
+        '4': {name: punctuation.definition.entry.yaml.coral}
+    - name: string.unquoted.yaml.coral
+      match: (?:(?:(-\s*)?(\w+\s*(:)))|(-))\s*(?:((")[^"]*("))|((')[^']*('))|([^,{}&#\[\]]+))\s*
+      captures:
+        '1': {name: punctuation.definition.entry.yaml.coral}
+        '2': {name: entity.other.attribute-name.yaml.coral}
+        '3': {name: punctuation.separator.key-value.yaml.coral}
+        '4': {name: punctuation.definition.entry.yaml.coral}
+        '5': {name: string.quoted.double.yaml.coral}
+        '6': {name: punctuation.definition.string.begin.yaml.coral}
+        '7': {name: punctuation.definition.string.end.yaml.coral}
+        '8': {name: string.quoted.single.yaml.coral}
+        '9': {name: punctuation.definition.string.begin.yaml.coral}
+        '10': {name: punctuation.definition.string.end.yaml.coral}
+        '11': {name: string.unquoted.yaml.coral}
+
+  enum-spec:
+    name: meta.enum.coral
+    begin: (enum)\s+(\w+)
+    beginCaptures:
+      '1': {name: keyword.control.class.coral}
+      '2': {name: entity.name.type.class.coral}
+    end: '}'
+    patterns:
+    - name: meta.enum.coral
+      begin: \w+
+      beginCaptures:
+        '0': {name: constant.other.symbol.coral}
+      end: (?=,|}|/)
+    - include: '#comment'
+
+  field:
+    patterns:
+    - name: meta.class.field.coral
+      begin: (readonly)
+      beginCaptures:
+        '1': {name: storage.modifier.readonly.coral}
+      end: (?=;)
+      patterns:
+      - include: '#type'
+      - name: variable.other.readonly.instance.coral
+        match: '[a-z]\w*'
+    - name: meta.class.field.coral
+      patterns:
+      - include: '#type'
+      - name: variable.other.readwrite.instance.coral
+        match: '[a-z]\w*'
+
+  import:
+    patterns:
+      - name: meta.import.coral
+        match: ^\s*(import)\b(?:\s*([^ ;$]+)\s*(;)?)?
+        captures:
+          '1': {name: keyword.other.import.coral}
+          '2': {name: storage.modifier.import.coral}
+          '3': {name: punctuation.terminator.coral}
+
+  method:
+    name: meta.method.coral
+    begin: (?=\w+\s+\w+\s*\()
+    end: (?=;)
+    patterns:
+    - name: meta.method.return-type.coral
+      begin: (?=\w.*\s+\w+\s*\()
+      end: (?=\w+\s*\()
+      patterns:
+      - include: '#type'
+    - name: meta.method.identifier.coral
+      begin: (\w+)\s*\(
+      beginCaptures:
+        '1': {name: entity.name.function.coral}
+      end: \)
+      patterns:
+      - include: '#parameter'
+    - name: meta.method.raises.coral
+      begin: raises
+      beginCaptures:
+        '0': {name: keyword.control.raises.coral}
+      end: (?=;)
+      patterns:
+      - include: '#type-name'
+
+  parameter:
+    patterns:
+    - name: storage.modifier.inout.coral
+      match: (?:inout|in|out)\b
+    - include: '#type'
+    - name: variable.parameter.coral
+      match: \w+
+
+  port:
+    patterns:
+    - name: meta.component.provides.coral
+      begin: (provides)
+      beginCaptures:
+        '1': {name: storage.modifier.provides.coral}
+      end: (?=;)
+      patterns:
+      - include: '#type-name'
+      - name: variable.other.readonly.instance.coral
+        match: '[a-z]\w*'
+    - name: meta.component.receives.coral
+      begin: (receives)
+      beginCaptures:
+        '1': {name: storage.modifier.receives.coral}
+      end: (?=;)
+      patterns:
+      - include: '#type-name'
+      - name: variable.other.readwrite.instance.coral
+        match: '[a-z]\w*'
+
+  string:
+    patterns:
+    - name: string.quoted.double.coral
+      begin: '"'
+      beginCaptures:
+        '0': {name: punctuation.definition.string.begin.coral}
+      end: '"'
+      endCaptures:
+        '0': {name: punctuation.definition.string.end.coral}
+      patterns:
+      - name: constant.character.escape.coral
+        match: \\.
+
+  type:
+    patterns:
+    - name: constant.other.array.coral
+      match: \[\]
+    - include: '#type-base'
+
+  type-base:
+    patterns:
+    - name: storage.type.coral
+      match: \b(?:any|bool|double|float|int8|int16|int32|string|uint8|uint16|uint32|void)\b
+    - include: '#type-name'
+
+
+  type-name:
+    patterns:
+    - name: support.class.coral
+      match: \b(?:[a-z]\w*(\.))*[A-Z]\w*\b
+      captures:
+        '1': {name: punctuation.separator.other.coral}
+
+  value:
+    patterns:
+    - include: '#string'
+    - name: constant.language.coral
+      match: \b(true|false)\b
+    - name: constant.numeric.coral
+      match: \b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)([LlFfUuDd]|UL|ul)?\b
+
+...
